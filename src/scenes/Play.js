@@ -94,7 +94,7 @@ class Play extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(keyA) && (!this.doingAction || this.isJumping)) {
             this.glide();
         }
-        if (Phaser.Input.Keyboard.JustDown(keyS) && !this.doingAction) {
+        if (Phaser.Input.Keyboard.JustDown(keyS) && !this.doingAction && this.wizard.body.touching.down) {
             this.slide();
         }
         if (Phaser.Input.Keyboard.JustDown(keyD) && !this.doingAction) {
@@ -129,6 +129,8 @@ class Play extends Phaser.Scene {
     slide() {
         this.doingAction = true;
         this.isSliding = true;
+        this.wizard.setBodySize(100,50);
+        this.wizard.y += 25;
     }
 
     fireball() {
@@ -176,6 +178,13 @@ class Play extends Phaser.Scene {
             this.wizard.body.allowGravity = true;
             this.cloud.x = -100;
             this.cloud.y = -100;
+        }
+        // slide ends when key is up
+        if (Phaser.Input.Keyboard.JustUp(keyS) && this.isSliding) {
+            this.isSliding = false;
+            this.doingAction = false;
+            this.wizard.setBodySize(100, 100);
+            this.wizard.y -= 25;
         }
     }
 

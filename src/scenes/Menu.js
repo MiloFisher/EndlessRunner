@@ -19,11 +19,11 @@ class Menu extends Phaser.Scene {
                 top: 5,
                 bottom: 5,
             },
-            fixedWidth: 350
+            fixedWidth: 450
         }
 
         this.text1 = this.add.text(game.config.width / 2 - 100, game.config.height/2 + 30, 'Press SPACE to start', config);
-        this.text2 = this.add.text(game.config.width / 2 - 100, game.config.height / 2, 'Use W to jump, A to glide', config);
+        this.text2 = this.add.text(game.config.width / 2 - 100, game.config.height / 2, 'Use W to jump, A to glide, S to slide', config);
         this.text2 = this.add.text(game.config.width / 2 - 100, game.config.height / 2 - 30, 'Last score: ' + score, config);
 
         // define keys
