@@ -51,15 +51,15 @@ class Play extends Phaser.Scene {
         // display score
         let scoreConfig = {
             fontFamily: 'Courier',
-            fontSize: '20px',
-            backgroundColor: '#B72426',
+            fontSize: '28px',
+            backgroundColor: '#000000',
             color: '#FFFFFF',
             align: 'left',
             padding: {
                 top: 5,
                 bottom: 5,
             },
-            fixedWidth: 60
+            fixedWidth: 100
         }
 
         this.scoreDisplay = this.add.text(scoreX, scoreY, score, scoreConfig);
@@ -95,6 +95,9 @@ class Play extends Phaser.Scene {
 
         this.background.tilePositionX += gameSpeed;
         this.updatePlatforms();
+
+        score += 1;
+        this.scoreDisplay.text = score;
 
         // if (!this.gameOver) {
         //     

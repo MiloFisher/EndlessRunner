@@ -22,9 +22,9 @@ class Menu extends Phaser.Scene {
             fixedWidth: 250
         }
 
-        this.text1 = this.add.text(game.config.width/2 - 250, game.config.height/2, 'Press SPACE to start', config);
-        this.text2 = this.add.text(game.config.width / 2 - 200, game.config.height / 2 + 30, 'Use W to jump', config);
-
+        this.text1 = this.add.text(game.config.width / 2 - 100, game.config.height/2, 'Press SPACE to start', config);
+        this.text2 = this.add.text(game.config.width / 2 - 50, game.config.height / 2 + 30, 'Use W to jump', config);
+        this.text2 = this.add.text(game.config.width / 2 - 50, game.config.height / 2 - 30, 'Last score: ' + score, config);
 
         // define keys
         keySPACE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -38,6 +38,7 @@ class Menu extends Phaser.Scene {
             }
             // play sound and load scene
             // this.sound.play('name');
+            score = 0;
             this.scene.start('playScene');
         }
     }

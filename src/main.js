@@ -19,8 +19,8 @@ let jumpStrength = 600;
 let platformGap = 300;
 
 //ui positions
-let scoreX = game.config.width - 70;
-let scoreY = 10;
+let scoreX = game.config.width - 130;
+let scoreY = 30;
 
 let platformSpawnX = game.config.width * 1.5;
 let platformSpawnY = game.config.height;
