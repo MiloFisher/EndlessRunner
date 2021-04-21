@@ -16,6 +16,7 @@ let game = new Phaser.Game(config);
 let score =  0;
 let gameSpeed = 6;
 let jumpStrength = 600;
+let glideVelocity = 75;
 let platformGap = 300;
 
 //ui positions

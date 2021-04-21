@@ -76,14 +76,17 @@ class Play extends Phaser.Scene {
         //check for game over
         this.checkForGameOver();
 
+        //while actions are active
+        this.whileGliding();
+
         //checks for action's end
         this.checkActionEnd();
 
         // Get input
-        if (Phaser.Input.Keyboard.JustDown(keyW) && !this.doingAction) {
+        if (Phaser.Input.Keyboard.JustDown(keyW) && !this.doingAction && this.wizard.body.touching.down) {
             this.jump();
         } 
-        if (Phaser.Input.Keyboard.JustDown(keyA) && !this.doingAction) {
+        if (Phaser.Input.Keyboard.JustDown(keyA) && (!this.doingAction || this.isJumping)) {
             this.glide();
         }
         if (Phaser.Input.Keyboard.JustDown(keyS) && !this.doingAction) {
@@ -131,6 +134,13 @@ class Play extends Phaser.Scene {
     glide()  {
         this.doingAction = true;
         this.isGliding = true;
+        this.wizard.body.allowGravity = false;
+    }
+
+    whileGliding() {
+        if(this.isGliding) {
+            this.wizard.setVelocityY(glideVelocity);
+        }
     }
 
     updatePlatforms() {
@@ -149,6 +159,14 @@ class Play extends Phaser.Scene {
         if (this.isJumping && this.wizard.body.touching.down) {
             this.isJumping = false;
             this.doingAction = false;
+        }
+        // glide ends when key is up
+        if (Phaser.Input.Keyboard.JustUp(keyA) && this.isGliding) {
+            if(!this.isJumping) {
+                this.doingAction = false;
+            }
+            this.isGliding = false;
+            this.wizard.body.allowGravity = true;
         }
     }
 
