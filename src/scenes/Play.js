@@ -31,6 +31,11 @@ class Play extends Phaser.Scene {
         // add player
         this.wizard = this.physics.add.image(wizardSpawnX, wizardSpawnY, 'wizard');
 
+        // add cloud
+        this.cloud = this.physics.add.image(-100, -100, 'cloud');
+        this.cloud.setImmovable(true);
+        this.cloud.body.allowGravity = false;
+
         // add collisions
         this.physics.add.collider(this.wizard, this.platform01);
         this.physics.add.collider(this.wizard, this.platform02);
@@ -140,6 +145,8 @@ class Play extends Phaser.Scene {
     whileGliding() {
         if(this.isGliding) {
             this.wizard.setVelocityY(glideVelocity);
+            this.cloud.x = this.wizard.x;
+            this.cloud.y = this.wizard.y + this.wizard.height/2;
         }
     }
 
@@ -167,6 +174,8 @@ class Play extends Phaser.Scene {
             }
             this.isGliding = false;
             this.wizard.body.allowGravity = true;
+            this.cloud.x = -100;
+            this.cloud.y = -100;
         }
     }
 
