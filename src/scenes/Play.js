@@ -21,12 +21,18 @@ class Play extends Phaser.Scene {
         this.background = this.add.tileSprite(0, 0, 1200, 700, 'background').setOrigin(0, 0);
 
         // add platforms
-        this.platform01 = this.physics.add.image(platformSpawnX - game.config.width, platformSpawnY, 'platform');
-        this.platform02 = this.physics.add.image(platformSpawnX + platformGap, platformSpawnY, 'platform');
-        this.platform01.setImmovable(true);
-        this.platform02.setImmovable(true);
-        this.platform01.body.allowGravity = false;
-        this.platform02.body.allowGravity = false;
+        this.platform = this.physics.add.group({
+            key: 'platform',
+            frameQuantity: 12,
+            immovable: true,
+            allowGravity: false,
+            active: false,
+            visible: false,
+            enable: false
+        });
+        this.platforms = [];
+        this.platforms.push(this.createPlatform(platformSpawnX - game.config.width, platformSpawnY));
+        this.platforms.push(this.createPlatform(platformSpawnX + platformGap, platformSpawnY));
 
         // add player
         this.wizard = this.physics.add.image(wizardSpawnX, wizardSpawnY, 'wizard');
@@ -36,9 +42,24 @@ class Play extends Phaser.Scene {
         this.cloud.setImmovable(true);
         this.cloud.body.allowGravity = false;
 
+        // add fireball
+        // this.fireball = this.physics.add(new Fireball(-100, -100, 'fireball', 0));
+        // this.fireball.setImmovable(true);
+        // this.fireball.body.allowGravity = false;
+        this.fireball = this.physics.add.group({
+            key: 'fireball',
+            frameQuantity: 10,
+            immovable: true,
+            allowGravity: false,
+            active: false,
+            visible: false,
+            enable: false
+        });
+        this.fireballs = [];
+        //this.fireballs.body.allowGravity = false;
+
         // add collisions
-        this.physics.add.collider(this.wizard, this.platform01);
-        this.physics.add.collider(this.wizard, this.platform02);
+        this.physics.add.collider(this.wizard, this.platforms);
 
         // define keys
         keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -83,6 +104,7 @@ class Play extends Phaser.Scene {
 
         //while actions are active
         this.whileGliding();
+        this.whileShooting();
 
         //checks for action's end
         this.checkActionEnd();
@@ -97,8 +119,8 @@ class Play extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(keyS) && !this.doingAction && this.wizard.body.touching.down) {
             this.slide();
         }
-        if (Phaser.Input.Keyboard.JustDown(keyD) && !this.doingAction) {
-            this.fireball();
+        if (Phaser.Input.Keyboard.JustDown(keyD) && !this.isShooting) {
+            this.shoot();
         }
 
         this.background.tilePositionX += gameSpeed;
@@ -106,18 +128,6 @@ class Play extends Phaser.Scene {
 
         score += 1;
         this.scoreDisplay.text = score;
-
-        // if (!this.gameOver) {
-        //     
-        //     this.player1.update();
-        //     this.player2.update();
-        //     this.arrow1.update();
-        //     this.arrow2.update();
-        //     this.target1.update();
-        //     this.target2.update();
-        //     this.target3.update();
-        // }
-        
     }
 
     jump() {
@@ -133,9 +143,12 @@ class Play extends Phaser.Scene {
         this.wizard.y += 25;
     }
 
-    fireball() {
-        this.doingAction = true;
+    shoot() {
         this.isShooting = true;
+        this.fireballs.push(this.createFireball(this.wizard.x,this.wizard.y));
+        this.clock = this.time.delayedCall(shootCooldown, () => {
+            this.isShooting = false;
+        }, null, this);
     }
 
     glide()  {
@@ -152,14 +165,28 @@ class Play extends Phaser.Scene {
         }
     }
 
-    updatePlatforms() {
-        this.platform01.x -= gameSpeed;
-        this.platform02.x -= gameSpeed;
-        if(this.platform01.x <= -game.config.width + platformGap) {
-            this.platform01.x = platformSpawnX + platformGap;
+    whileShooting() {
+        for (var i = 0; i < this.fireballs.length; i++) {
+            this.fireballs[i].x += fireballSpeed;
         }
-        if (this.platform02.x <= -game.config.width + platformGap) {
-            this.platform02.x = platformSpawnX + platformGap;
+        for (var i = 0; i < this.fireballs.length; i++) {
+            if (this.fireballs[i].x > game.config.width) {
+                this.fireballs[i].disableBody(true, true);
+                this.fireballs.splice(i, 1);
+            }
+        }
+    }
+
+    updatePlatforms() {
+        for(var i = 0; i < this.platforms.length; i++) {
+            this.platforms[i].x -= gameSpeed;
+            this.platforms[i].x -= gameSpeed;
+            if (this.platforms[i].x <= -game.config.width + platformGap) {
+                this.platforms[i].x = platformSpawnX + platformGap;
+            }
+            if (this.platforms[i].x <= -game.config.width + platformGap) {
+                this.platforms[i].x = platformSpawnX + platformGap;
+            }
         }
     }
 
@@ -194,5 +221,25 @@ class Play extends Phaser.Scene {
         if(this.wizard.y > game.config.height) {
             this.scene.start('menuScene');
         }
+    }
+
+    createPlatform(x, y) {
+        var p = this.platform.get();
+
+        if (!p) return;
+
+        p.enableBody(true, x, y, true, true)
+
+        return p;
+    }
+
+    createFireball(x, y) {
+        var f = this.fireball.get();
+
+        if (!f) return;
+
+        f.enableBody(true, x, y, true, true)
+
+        return f;
     }
 }

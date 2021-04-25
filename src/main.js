@@ -17,6 +17,8 @@ let score =  0;
 let gameSpeed = 6;
 let jumpStrength = 600;
 let glideVelocity = 75;
+let fireballSpeed = 12;
+let shootCooldown = 1000;
 let platformGap = 300;
 
 //ui positions
@@ -24,7 +26,7 @@ let scoreX = game.config.width - 130;
 let scoreY = 30;
 
 let platformSpawnX = game.config.width * 1.5;
-let platformSpawnY = game.config.height;
+let platformSpawnY = game.config.height + 32;
 
 let wizardSpawnX = game.config.width / 4;
 let wizardSpawnY = game.config.height - 200;
