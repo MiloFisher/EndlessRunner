@@ -46,6 +46,19 @@ class Play extends Phaser.Scene {
         this.platforms.push(this.createPlatform(platformSpawnX - game.config.width, platformSpawnY));
         this.platforms.push(this.createPlatform(platformSpawnX + platformGap, platformSpawnY));
 
+        // add trap
+        this.trap = this.physics.add.group({
+            key: 'trap',
+            frameQuantity: 12,
+            immovable: true,
+            allowGravity: false,
+            active: false,
+            visible: false,
+            enable: false
+        });
+        this.traps = [];
+        this.traps.push(this.createTrap(platformSpawnX - game.config.width, platformSpawnY));
+
         // add player
         this.wizard = this.physics.add.image(wizardSpawnX, wizardSpawnY, 'wizard');
 
@@ -86,7 +99,7 @@ class Play extends Phaser.Scene {
         // sound config
         this.runConfig = {
             rate: 1.5,
-            volume: 2,
+            volume: 1.5,
             loop: true
         }
         this.runSound = this.sound.add('run', this.runConfig);
@@ -256,21 +269,22 @@ class Play extends Phaser.Scene {
 
     createPlatform(x, y) {
         var p = this.platform.get();
-
         if (!p) return;
-
-        p.enableBody(true, x, y, true, true)
-
+        p.enableBody(true, x, y, true, true);
         return p;
+    }
+
+    createTrap(x, y) {
+        var t = this.trap.get();
+        if (!t) return;
+        t.enableBody(true, x, y, true, true);
+        return t;
     }
 
     createFireball(x, y) {
         var f = this.fireball.get();
-
         if (!f) return;
-
-        f.enableBody(true, x, y, true, true)
-
+        f.enableBody(true, x, y, true, true);
         return f;
     }
 }
