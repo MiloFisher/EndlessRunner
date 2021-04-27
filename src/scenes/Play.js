@@ -12,6 +12,18 @@ class Play extends Phaser.Scene {
         this.load.image('platform', './assets/temp_platform.png');
         this.load.image('background', './assets/temp_background.png');
 
+        // load audio
+        this.load.audio('glide', './assets/Gliding.mp3');
+        this.load.audio('jump', './assets/Jumping.mp3');
+        this.load.audio('land', './assets/Landing.mp3');
+        this.load.audio('run', './assets/Running.mp3');
+        this.load.audio('slide', './assets/Sliding.mp3');
+        this.load.audio('spike_trap', './assets/Spike Trap.mp3');
+        this.load.audio('box_break', './assets/Box Breaking.mp3');
+        this.load.audio('door_close', './assets/Door Closing.mp3');
+        this.load.audio('explosion1', './assets/Explosion+1.wav');
+        this.load.audio('explosion2', './assets/explosion38.wav');
+
         // load spritesheet
         // this.load.spritesheet('name', './assets/name.png', { frameWidth: 64, frameHeight: 32, startFrame: 0, endFrame: 9 });
     }
@@ -43,9 +55,6 @@ class Play extends Phaser.Scene {
         this.cloud.body.allowGravity = false;
 
         // add fireball
-        // this.fireball = this.physics.add(new Fireball(-100, -100, 'fireball', 0));
-        // this.fireball.setImmovable(true);
-        // this.fireball.body.allowGravity = false;
         this.fireball = this.physics.add.group({
             key: 'fireball',
             frameQuantity: 10,
@@ -73,6 +82,15 @@ class Play extends Phaser.Scene {
         //     frames: this.anims.generateFrameNumbers('explosion', { start: 0, end: 9, first: 0 }),
         //     frameRate: 30
         // });
+
+        // sound config
+        this.runConfig = {
+            rate: 1.5,
+            volume: 2,
+            loop: true
+        }
+        this.runSound = this.sound.add('run', this.runConfig);
+        this.runSound.play(this.runConfig);
 
         // display score
         let scoreConfig = {
@@ -126,8 +144,21 @@ class Play extends Phaser.Scene {
         this.background.tilePositionX += gameSpeed;
         this.updatePlatforms();
 
+        this.updateSounds();
+
         score += 1;
         this.scoreDisplay.text = score;
+    }
+
+    updateSounds() {
+        // play run sound if not playing it and on ground
+        if (this.wizard.body.touching.down && !this.runSound.isPlaying) {
+            this.runSound.resume();
+        }
+        // pause run sound if playing it and not on ground
+        if (!this.wizard.body.touching.down && this.runSound.isPlaying) {
+            this.runSound.pause();
+        }
     }
 
     jump() {

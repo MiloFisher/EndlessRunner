@@ -4,8 +4,7 @@ class Menu extends Phaser.Scene {
     }
 
     preload() {
-        // load audio
-        // this.load.audio('name', './assets/name.wav');
+        
     }
 
     create() {
@@ -37,8 +36,6 @@ class Menu extends Phaser.Scene {
             game.settings = {
                 gameTimer: 120000
             }
-            // play sound and load scene
-            // this.sound.play('name');
             score = 0;
             this.scene.start('playScene');
         }
