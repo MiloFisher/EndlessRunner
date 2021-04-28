@@ -82,6 +82,9 @@ class Play extends Phaser.Scene {
 
         // add collisions
         this.physics.add.collider(this.wizard, this.platforms);
+        this.physics.add.collider(this.wizard, this.traps, () => {
+            this.gameOver();
+        });
 
         // define keys
         keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -263,7 +266,7 @@ class Play extends Phaser.Scene {
     checkForGameOver() {
         // game over if misses jump
         if(this.wizard.y > game.config.height) {
-            this.scene.start('menuScene');
+            this.gameOver();
         }
     }
 
@@ -286,5 +289,9 @@ class Play extends Phaser.Scene {
         if (!f) return;
         f.enableBody(true, x, y, true, true);
         return f;
+    }
+
+    gameOver() {
+        this.scene.start('menuScene');
     }
 }
