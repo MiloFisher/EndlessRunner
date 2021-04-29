@@ -17,7 +17,8 @@ let score =  0;
 let gameSpeed = 6;
 let jumpStrength = 600;
 let glideVelocity = 75;
-let fireballSpeed = 12;
+let fireballSpeed = 6;
+let shootAnimation = 250;
 let shootCooldown = 1000;
 let platformGap = 300;
 

@@ -5,10 +5,6 @@ class Play extends Phaser.Scene {
 
     preload() {
         // load images/tile sprites
-        this.load.image('wizard', './assets/temp_wizard.png');
-        this.load.image('wizard_slide', './assets/temp_wizard_sliding.png');
-        this.load.image('fireball', './assets/temp_fireball.png');
-        this.load.image('cloud', './assets/temp_cloud.png');
         this.load.image('platform', './assets/temp_platform.png');
         this.load.image('background', './assets/temp_background.png');
 
@@ -25,7 +21,13 @@ class Play extends Phaser.Scene {
         this.load.audio('explosion2', './assets/explosion38.wav');
 
         // load spritesheet
-        // this.load.spritesheet('name', './assets/name.png', { frameWidth: 64, frameHeight: 32, startFrame: 0, endFrame: 9 });
+        this.load.spritesheet('running', './assets/wizard_running.png', { frameWidth: 350, frameHeight: 500, startFrame: 0, endFrame: 1 });
+        this.load.spritesheet('shooting', './assets/wizard_shooting.png', { frameWidth: 430, frameHeight: 500, startFrame: 0, endFrame: 0 });
+        this.load.spritesheet('jumping', './assets/wizard_jumping.png', { frameWidth: 300, frameHeight: 500, startFrame: 0, endFrame: 0 });
+        this.load.spritesheet('gliding', './assets/wizard_gliding.png', { frameWidth: 500, frameHeight: 700, startFrame: 0, endFrame: 0 });
+        this.load.spritesheet('sliding', './assets/wizard_sliding.png', { frameWidth: 500, frameHeight: 500, startFrame: 0, endFrame: 0 });
+        this.load.spritesheet('fireball', './assets/fireball.png', { frameWidth: 300, frameHeight: 200, startFrame: 0, endFrame: 3 });
+        this.load.spritesheet('explosion', './assets/explosion.png', { frameWidth: 300, frameHeight: 300, startFrame: 0, endFrame: 5 });
     }
 
     create() {
@@ -60,12 +62,8 @@ class Play extends Phaser.Scene {
         this.traps.push(this.createTrap(platformSpawnX - game.config.width, platformSpawnY));
 
         // add player
-        this.wizard = this.physics.add.image(wizardSpawnX, wizardSpawnY, 'wizard');
-
-        // add cloud
-        this.cloud = this.physics.add.image(-100, -100, 'cloud');
-        this.cloud.setImmovable(true);
-        this.cloud.body.allowGravity = false;
+        this.wizard = this.physics.add.sprite(wizardSpawnX, wizardSpawnY, 'running');
+        this.wizard.scale = .2;
 
         // add fireball
         this.fireball = this.physics.add.group({
@@ -93,20 +91,96 @@ class Play extends Phaser.Scene {
         keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
         // animation config
-        // this.anims.create({
-        //     key: 'explode',
-        //     frames: this.anims.generateFrameNumbers('explosion', { start: 0, end: 9, first: 0 }),
-        //     frameRate: 30
-        // });
+        this.anims.create({
+            key: 'running',
+            frames: this.anims.generateFrameNumbers('running', { start: 0, end: 1, first: 0 }),
+            frameRate: 10,
+            scale: .2
+        });
+
+        this.anims.create({
+            key: 'shooting',
+            frames: this.anims.generateFrameNumbers('shooting', { start: 0, end: 0, first: 0 }),
+            frameRate: 0,
+            scale: .2
+        });
+
+        this.anims.create({
+            key: 'jumping',
+            frames: this.anims.generateFrameNumbers('jumping', { start: 0, end: 0, first: 0 }),
+            frameRate: 0,
+            scale: .2
+        });
+
+        this.anims.create({
+            key: 'gliding',
+            frames: this.anims.generateFrameNumbers('gliding', { start: 0, end: 0, first: 0 }),
+            frameRate: 0,
+            scale: .2
+        });
+
+        this.anims.create({
+            key: 'sliding',
+            frames: this.anims.generateFrameNumbers('sliding', { start: 0, end: 0, first: 0 }),
+            frameRate: 0,
+            scale: .2
+        });
+
+        this.anims.create({
+            key: 'fireball',
+            frames: this.anims.generateFrameNumbers('fireball', { start: 0, end: 3, first: 0 }),
+            frameRate: 5
+        });
+
+        this.anims.create({
+            key: 'explosion',
+            frames: this.anims.generateFrameNumbers('explosion', { start: 0, end: 5, first: 0 }),
+            frameRate: 10
+        });
 
         // sound config
         this.runConfig = {
             rate: 1.5,
-            volume: 1.5,
+            volume: 2,
             loop: true
         }
         this.runSound = this.sound.add('run', this.runConfig);
         this.runSound.play(this.runConfig);
+
+        this.jumpConfig = {
+            rate: 1,
+            volume: 1,
+            loop: false
+        }
+        this.jumpSound = this.sound.add('jump', this.jumpConfig);
+
+        this.glideConfig = {
+            rate: .5,
+            volume: .5,
+            loop: true
+        }
+        this.glideSound = this.sound.add('glide', this.glideConfig);
+
+        this.landConfig = {
+            rate: 2,
+            volume: .5,
+            loop: false
+        }
+        this.landSound = this.sound.add('land', this.landConfig);
+
+        this.slideConfig = {
+            rate: .5,
+            volume: .3,
+            loop: true
+        }
+        this.slideSound = this.sound.add('slide', this.slideConfig);
+
+        this.fireballConfig = {
+            rate: 1.5,
+            volume: .8,
+            loop: false
+        }
+        this.fireballSound = this.sound.add('explosion2', this.fireballConfig);
 
         // display score
         let scoreConfig = {
@@ -129,7 +203,10 @@ class Play extends Phaser.Scene {
         this.isJumping = false;         // set while player is jumping only
         this.isSliding = false;         // set while player is sliding only
         this.isShooting = false;        // set while player is shooting only
+        this.shootingAnimation = false; // set while player is doing shooting animation only
         this.isGliding = false;         // set while player is gliding only
+        this.queuedGlide = false;       // set while trying to glide but is still shooting
+        this.queuedSlide = false;       // set while trying to slide but is still jumping or shooting
     }
 
     update() {
@@ -147,11 +224,19 @@ class Play extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(keyW) && !this.doingAction && this.wizard.body.touching.down) {
             this.jump();
         } 
-        if (Phaser.Input.Keyboard.JustDown(keyA) && (!this.doingAction || this.isJumping)) {
-            this.glide();
+        if (Phaser.Input.Keyboard.JustDown(keyA) && (!this.doingAction || this.isJumping) && !this.wizard.body.touching.down) {
+            if (!this.shootingAnimation) {
+                this.glide();
+            } else {
+                this.queuedGlide = true;
+            } 
         }
-        if (Phaser.Input.Keyboard.JustDown(keyS) && !this.doingAction && this.wizard.body.touching.down) {
-            this.slide();
+        if (Phaser.Input.Keyboard.JustDown(keyS) && !this.isGliding && !this.isSliding) {
+            if (!this.shootingAnimation && this.wizard.body.touching.down) {
+                this.slide();
+            } else {
+                this.queuedSlide = true;
+            }
         }
         if (Phaser.Input.Keyboard.JustDown(keyD) && !this.isShooting) {
             this.shoot();
@@ -162,17 +247,26 @@ class Play extends Phaser.Scene {
 
         this.updateSounds();
 
+        this.updateAnimations();
+
         score += 1;
         this.scoreDisplay.text = score;
     }
 
+    updateAnimations() {
+        if(!this.doingAction && !this.shootingAnimation) {
+            this.wizard.anims.play('running', true);
+            this.wizard.setBodySize(350, 500);
+        }
+    }
+
     updateSounds() {
         // play run sound if not playing it and on ground
-        if (this.wizard.body.touching.down && !this.runSound.isPlaying) {
+        if (this.wizard.body.touching.down && !this.runSound.isPlaying && !this.isSliding) {
             this.runSound.resume();
         }
         // pause run sound if playing it and not on ground
-        if (!this.wizard.body.touching.down && this.runSound.isPlaying) {
+        if ((!this.wizard.body.touching.down || this.isSliding) && this.runSound.isPlaying) {
             this.runSound.pause();
         }
     }
@@ -181,19 +275,59 @@ class Play extends Phaser.Scene {
         this.doingAction = true;
         this.isJumping = true;
         this.wizard.setVelocityY(-jumpStrength);
+        this.wizard.anims.play('jumping', true);
+        this.wizard.setBodySize(350, 500);
+        this.jumpSound.play(this.jumpConfig);
     }
 
     slide() {
         this.doingAction = true;
         this.isSliding = true;
-        this.wizard.setBodySize(100,50);
+        this.wizard.anims.play('sliding', true);
+        this.wizard.setBodySize(500,250);
         this.wizard.y += 25;
+        this.slideSound.play(this.slideConfig);
     }
 
     shoot() {
+        if(this.isSliding) {
+            this.isSliding = false;
+            this.doingAction = false;
+            this.wizard.y -= 25;
+            this.slideSound.stop();
+        } else if(this.isGliding) {
+            if (!this.isJumping) {
+                this.doingAction = false;
+            }
+            this.isGliding = false;
+            this.wizard.body.allowGravity = true;
+            this.glideSound.stop();
+        }
+        this.shootingAnimation = true;
         this.isShooting = true;
-        this.fireballs.push(this.createFireball(this.wizard.x,this.wizard.y));
-        this.clock = this.time.delayedCall(shootCooldown, () => {
+        this.fireballs.push(this.createFireball(this.wizard.x + 50, this.wizard.y + 13));
+        this.wizard.anims.play('shooting', true);
+        this.wizard.setBodySize(350, 500);
+        this.fireballSound.play(this.fireballConfig);
+        this.clock1 = this.time.delayedCall(shootAnimation, () => {
+            this.shootingAnimation = false;
+            if(this.isJumping) {
+                if (this.queuedGlide) {
+                    this.glide();
+                } else {
+                    this.wizard.anims.play('jumping', true);
+                }
+                this.queuedGlide = false;
+            } else {
+                if (this.queuedSlide) {
+                    this.slide();
+                } else {
+                    this.wizard.anims.play('running', true);
+                }
+                this.queuedSlide = false;
+            }
+        }, null, this);
+        this.clock2 = this.time.delayedCall(shootCooldown, () => {
             this.isShooting = false;
         }, null, this);
     }
@@ -202,19 +336,21 @@ class Play extends Phaser.Scene {
         this.doingAction = true;
         this.isGliding = true;
         this.wizard.body.allowGravity = false;
+        this.wizard.anims.play('gliding', true);
+        this.wizard.setBodySize(350, 500);
+        this.glideSound.play(this.glideConfig);
     }
 
     whileGliding() {
         if(this.isGliding) {
             this.wizard.setVelocityY(glideVelocity);
-            this.cloud.x = this.wizard.x;
-            this.cloud.y = this.wizard.y + this.wizard.height/2;
         }
     }
 
     whileShooting() {
         for (var i = 0; i < this.fireballs.length; i++) {
             this.fireballs[i].x += fireballSpeed;
+            this.fireballs[i].anims.play('fireball', true);
         }
         for (var i = 0; i < this.fireballs.length; i++) {
             if (this.fireballs[i].x > game.config.width) {
@@ -242,23 +378,41 @@ class Play extends Phaser.Scene {
         if (this.isJumping && this.wizard.body.touching.down) {
             this.isJumping = false;
             this.doingAction = false;
+            if (this.queuedSlide) {
+                this.slide();
+            }
+            this.queuedSlide = false;
+            this.glideSound.stop();
+            this.landSound.play(this.landConfig);
         }
         // glide ends when key is up
-        if (Phaser.Input.Keyboard.JustUp(keyA) && this.isGliding) {
-            if(!this.isJumping) {
-                this.doingAction = false;
+        if (Phaser.Input.Keyboard.JustUp(keyA)) {
+            if(this.isGliding) {
+                if(!this.isJumping) {
+                    this.doingAction = false;
+                }
+                else {
+                    this.wizard.anims.play('jumping', true);
+                    this.wizard.setBodySize(350, 500);
+                }
+                this.isGliding = false;
+                this.wizard.body.allowGravity = true;
+                this.glideSound.stop();
+            } else {
+                this.queuedGlide = false;
             }
-            this.isGliding = false;
-            this.wizard.body.allowGravity = true;
-            this.cloud.x = -100;
-            this.cloud.y = -100;
         }
         // slide ends when key is up
-        if (Phaser.Input.Keyboard.JustUp(keyS) && this.isSliding) {
-            this.isSliding = false;
-            this.doingAction = false;
-            this.wizard.setBodySize(100, 100);
-            this.wizard.y -= 25;
+        if (Phaser.Input.Keyboard.JustUp(keyS)) {
+            if(this.isSliding) {
+                this.isSliding = false;
+                this.doingAction = false;
+                this.wizard.y -= 25;
+                this.wizard.setBodySize(350, 500);
+                this.slideSound.stop();
+            } else {
+                this.queuedSlide = false;
+            }
         }
     }
 
@@ -287,6 +441,7 @@ class Play extends Phaser.Scene {
     createFireball(x, y) {
         var f = this.fireball.get();
         if (!f) return;
+        f.scale = .3;
         f.enableBody(true, x, y, true, true);
         return f;
     }
