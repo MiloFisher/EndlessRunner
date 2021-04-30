@@ -22,6 +22,7 @@ let shootAnimation = 250;
 let shootCooldown = 1000;
 let platformGap = 300;
 let gameOver = false;
+let chunkOverlap = 2;
 
 //ui positions
 let scoreX = game.config.width - 130;
@@ -33,7 +34,7 @@ let platformSpawnY = game.config.height - 64;
 let trapSpawnX = game.config.width * 1.5;
 let trapSpawnY = game.config.height + 400;
 
-let trapActiveX = 100;
+let trapActiveX = game.config.width * .75;
 let trapActiveY = game.config.height - 160;
 
 let doorSpawnX = game.config.width * 1.5;

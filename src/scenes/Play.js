@@ -34,7 +34,9 @@ class Play extends Phaser.Scene {
         this.load.spritesheet('trap', './assets/ground_trap.png', { frameWidth: 196, frameHeight: 131, startFrame: 0, endFrame: 0 });
         this.load.spritesheet('door', './assets/falling_door.png', { frameWidth: 158, frameHeight: 600, startFrame: 0, endFrame: 0 });
         this.load.spritesheet('ceiling', './assets/ceiling.png', { frameWidth: 300, frameHeight: 1600, startFrame: 0, endFrame: 0 });
-        this.load.spritesheet('barrel', './assets/obstacle.png', { frameWidth: 441, frameHeight: 660, startFrame: 0, endFrame: 0 });
+        this.load.spritesheet('barrel', './assets/obstacle.png', { frameWidth: 441, frameHeight: 600, startFrame: 0, endFrame: 0 });
+        this.load.spritesheet('cliff1', './assets/cliff.png', { frameWidth: 800, frameHeight: 146, startFrame: 0, endFrame: 0 });
+        this.load.spritesheet('cliff2', './assets/cliff1.png', { frameWidth: 800, frameHeight: 146, startFrame: 0, endFrame: 0 });
     }
 
     create() {
@@ -53,7 +55,7 @@ class Play extends Phaser.Scene {
             enable: false
         });
         this.traps = [];
-        this.traps.push(this.createTrap(trapSpawnX * 1.5, trapSpawnY));
+        //this.traps.push(this.createTrap(trapSpawnX * 1.5, trapSpawnY));
 
         // add platforms
         this.platform = this.physics.add.group({
@@ -66,10 +68,32 @@ class Play extends Phaser.Scene {
             enable: false
         });
         this.platforms = [];
-        this.platforms.push(this.createPlatform(platformSpawnX - game.config.width, platformSpawnY));
-        this.platforms.push(this.createPlatform(platformSpawnX - game.config.width + 800, platformSpawnY));
-        this.platforms.push(this.createPlatform(platformSpawnX + platformGap, platformSpawnY));
-        this.platforms.push(this.createPlatform(platformSpawnX + platformGap + 800, platformSpawnY ));
+        this.platforms.push(this.createPlatform(platformSpawnX - (800 - gameSpeed * chunkOverlap) * 2, platformSpawnY));
+        this.platforms.push(this.createPlatform(platformSpawnX - (800 - gameSpeed * chunkOverlap) * 1, platformSpawnY));
+        this.platforms.push(this.createPlatform(platformSpawnX -  (800 - gameSpeed * chunkOverlap) * 0, platformSpawnY));
+
+        // add cliffs
+        this.cliff1 = this.physics.add.group({
+            key: 'cliff1',
+            frameQuantity: 12,
+            immovable: true,
+            allowGravity: false,
+            active: false,
+            visible: false,
+            enable: false
+        });
+        this.cliff2 = this.physics.add.group({
+            key: 'cliff2',
+            frameQuantity: 12,
+            immovable: true,
+            allowGravity: false,
+            active: false,
+            visible: false,
+            enable: false
+        });
+        this.cliffs = [];
+        //this.cliffs.push(this.createCliff1(platformSpawnX - game.config.width, platformSpawnY));
+        //this.cliffs.push(this.createCliff2(platformSpawnX + platformGap, platformSpawnY));
 
         // add closing door
         this.door = this.physics.add.group({
@@ -82,7 +106,7 @@ class Play extends Phaser.Scene {
             enable: false
         });
         this.doors = [];
-        this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
+        //this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
 
         // add door ceiling
         this.ceiling = this.physics.add.group({
@@ -95,7 +119,7 @@ class Play extends Phaser.Scene {
             enable: false
         });
         this.ceilings = [];
-        this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
+        //this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
 
         // add barrel
         this.barrel = this.physics.add.group({
@@ -108,7 +132,18 @@ class Play extends Phaser.Scene {
             enable: false
         });
         this.barrels = [];
-        this.barrels.push(this.createBarrel(barrelSpawnX * 2 , barrelSpawnY));
+
+        // add explosion
+        this.explosion = this.physics.add.group({
+            key: 'explosion',
+            frameQuantity: 12,
+            immovable: true,
+            allowGravity: false,
+            active: false,
+            visible: false,
+            enable: false
+        });
+        this.explosions = [];
 
         // add player
         this.wizard = this.physics.add.sprite(wizardSpawnX, wizardSpawnY, 'running');
@@ -129,17 +164,18 @@ class Play extends Phaser.Scene {
 
         // add collisions
         this.physics.add.collider(this.wizard, this.platforms);
+        this.physics.add.collider(this.wizard, this.cliffs);
         this.physics.add.collider(this.wizard, this.traps, () => {
             this.gameOver();
         });
         this.physics.add.collider(this.wizard, this.doors, () => {
             this.gameOver();
         });
-        this.physics.add.collider(this.wizard, this.barrels, (_wizard, _barrel) => {
-            if (!_barrel.anims.isPlaying) {
-                this.gameOver();
-            }
-        });
+        // this.physics.add.collider(this.wizard, this.barrels, (_wizard, _barrel) => {
+        //     if (!_barrel.anims.isPlaying) {
+        //         this.gameOver();
+        //     }
+        // });
         this.physics.add.collider(this.fireballs, this.barrels, (_fireball, _barrel) => {
             for (var i = 0; i < this.fireballs.length; i++) {
                 if (this.fireballs[i] == _fireball) {
@@ -151,8 +187,9 @@ class Play extends Phaser.Scene {
             }
             for (var i = 0; i < this.barrels.length; i++) {
                 if (this.barrels[i] == _barrel) {
-                    this.barrels[i].scale = .8;
-                    this.barrels[i].anims.play('explosion', true);
+                    this.explosions.push(this.createExplosion(this.barrels[i].x, this.barrels[i].y));
+                    this.barrels[i].disableBody(true, true);
+                    this.barrels.splice(i, 1);
                     this.barrelSound.play(this.barrelConfig);
                     break;
                 }
@@ -331,6 +368,8 @@ class Play extends Phaser.Scene {
         this.queuedGlide = false;       // set while trying to glide but is still shooting
         this.queuedSlide = false;       // set while trying to slide but is still jumping or shooting
         gameOver = false;
+        this.counter = 0;
+        this.gap = 0;
     }
 
     update() {
@@ -340,6 +379,7 @@ class Play extends Phaser.Scene {
         //while actions are active
         this.whileGliding();
         this.whileShooting();
+        this.whileExplosions();
 
         //checks for action's end
         this.checkActionEnd();
@@ -372,8 +412,88 @@ class Play extends Phaser.Scene {
 
         this.updateAnimations();
 
-        score += 1;
+        this.spawnObjects();
+
+        score += gameSpeed;
         this.scoreDisplay.text = score;
+    }
+
+    randomChunk(variation) {
+        console.log(variation);
+        switch(variation) {
+            case 0:
+                this.traps.push(this.createTrap(trapSpawnX, trapSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                break;
+            case 1:
+                this.barrels.push(this.createBarrel(barrelSpawnX, barrelSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                break;
+            case 2:
+                this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
+                this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                break;
+            case 3:
+                this.traps.push(this.createTrap(trapSpawnX, trapSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                break;
+            case 4:
+                this.barrels.push(this.createBarrel(barrelSpawnX, barrelSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                break;
+            case 5:
+                this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
+                this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                break;
+            case 6:
+                this.traps.push(this.createTrap(trapSpawnX, trapSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                break;
+            case 7:
+                this.barrels.push(this.createBarrel(barrelSpawnX, barrelSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                break;
+            case 8:
+                this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
+                this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                break;
+            case 9:
+                this.traps.push(this.createTrap(trapSpawnX, trapSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = 1;
+                break;
+            case 10:
+                this.barrels.push(this.createBarrel(barrelSpawnX, barrelSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = 3;
+                break;
+            case 11:
+                this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
+                this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = 3;
+                break;
+            case 12:
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                break;
+        }
+    }
+
+    spawnObjects() {
+        this.counter++;
+        if(this.counter >= 800/gameSpeed - chunkOverlap) {
+            this.counter = 0;
+            if(this.gap == 0) {
+                this.randomChunk(Phaser.Math.Between(0, 12));
+            }
+            this.gap--;
+            if(this.gap < 0) {
+                this.gap = 0;
+            }
+        }
     }
 
     updateAnimations() {
@@ -479,6 +599,22 @@ class Play extends Phaser.Scene {
             if (this.fireballs[i].x > game.config.width) {
                 this.fireballs[i].disableBody(true, true);
                 this.fireballs.splice(i, 1);
+                i--;
+            }
+        }
+    }
+
+    whileExplosions() {
+        for (var i = 0; i < this.explosions.length; i++) {
+            this.explosions[i].x -= gameSpeed;
+            this.explosions[i].anims.play('explosion', true);
+        }
+        for (var i = 0; i < this.explosions.length; i++) {
+            if(this.explosions[i].anims.currentFrame.index == 5) {
+                this.explosions[i].anims.stop();
+                this.explosions[i].disableBody(true, true);
+                this.explosions.splice(i, 1);
+                i--;
             }
         }
     }
@@ -491,11 +627,18 @@ class Play extends Phaser.Scene {
         // Move platforms
         for(var i = 0; i < this.platforms.length; i++) {
             this.platforms[i].x -= gameSpeed;
-            if (this.platforms[i].x <= -game.config.width + platformGap) {
-                this.platforms[i].x = platformSpawnX + platformGap;
+            if (this.platforms[i].x < -400) {
+                this.platforms[i].disableBody(true, true);
+                this.platforms.splice(i, 1);
+                i--;
             }
-            if (this.platforms[i].x <= -game.config.width + platformGap) {
-                this.platforms[i].x = platformSpawnX + platformGap;
+        }
+
+        // Move cliffs
+        for (var i = 0; i < this.cliffs.length; i++) {
+            this.cliffs[i].x -= gameSpeed;
+            if (this.cliffs[i].x <= -game.config.width + platformGap) {
+                this.cliffs[i].x = platformSpawnX + platformGap;
             }
         }
 
@@ -546,17 +689,17 @@ class Play extends Phaser.Scene {
         //Move barrels
         for (var i = 0; i < this.barrels.length; i++) {
             this.barrels[i].x -= gameSpeed;
+            // if (this.barrels[i].anims.currentFrame != null) {
+            //     if (this.barrels[i].anims.currentFrame.index == 5) {
+            //         this.barrels[i].disableBody(true, true);
+            //         this.barrels.splice(i, 1);
+            //         i--;
+            //     }
+            // }
             if (this.barrels[i].x < -100) {
                 this.barrels[i].disableBody(true, true);
                 this.barrels.splice(i, 1);
                 i--;
-            }
-            if (this.barrels[i].anims.currentFrame != null) {
-                if (this.barrels[i].anims.currentFrame.index == 5) {
-                    this.barrels[i].disableBody(true, true);
-                    this.barrels.splice(i, 1);
-                    i--;
-                }
             }
         }
     }
@@ -621,6 +764,22 @@ class Play extends Phaser.Scene {
         return p;
     }
 
+    createCliff1(x, y) {
+        var c = this.cliff1.get();
+        if (!c) return;
+        c.enableBody(true, x, y, true, true);
+        c.setBodySize(800, 150);
+        return c;
+    }
+
+    createCliff2(x, y) {
+        var c = this.cliff2.get();
+        if (!c) return;
+        c.enableBody(true, x, y, true, true);
+        c.setBodySize(800, 150);
+        return c;
+    }
+
     createTrap(x, y) {
         var t = this.trap.get();
         if (!t) return;
@@ -649,8 +808,16 @@ class Play extends Phaser.Scene {
         var b = this.barrel.get();
         if (!b) return;
         b.scale = .35;
-        b.enableBody(true, x, y, true, true);
+        b.enableBody(true, x, y, true, true); 
         return b;
+    }
+
+    createExplosion(x, y) {
+        var e = this.explosion.get();
+        if (!e) return;
+        e.scale = 1;
+        e.enableBody(true, x, y, true, true);
+        return e;
     }
 
     createFireball(x, y) {
@@ -663,13 +830,7 @@ class Play extends Phaser.Scene {
 
     gameOver() {
         gameOver = true;
-        this.runSound.stop();
-        this.jumpSound.stop();
-        this.landSound.stop();
-        this.glideSound.stop();
-        this.slideSound.stop();
-        this.fireballSound.stop();
-        this.doorClosingSound.stop();
+        game.sound.stopAll();
         this.scene.start('menuScene');
     }
 }

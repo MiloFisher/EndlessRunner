@@ -8,6 +8,8 @@ class Menu extends Phaser.Scene {
     }
 
     create() {
+        game.sound.stopAll();
+
         let config = {
             fontFamily: 'Courier',
             fontSize: '20px',
