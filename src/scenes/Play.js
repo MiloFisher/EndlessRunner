@@ -20,6 +20,8 @@ class Play extends Phaser.Scene {
         this.load.audio('explosion1', './assets/Explosion+1.wav');
         this.load.audio('explosion2', './assets/explosion38.wav');
         this.load.audio('closing', './assets/Door Closing.mp3');
+        this.load.audio('trap', './assets/Spike Trap.mp3');
+        this.load.audio('break', './assets/Box Breaking.mp3');
 
         // load spritesheet
         this.load.spritesheet('running', './assets/wizard_running.png', { frameWidth: 350, frameHeight: 500, startFrame: 0, endFrame: 1 });
@@ -32,12 +34,26 @@ class Play extends Phaser.Scene {
         this.load.spritesheet('trap', './assets/ground_trap.png', { frameWidth: 196, frameHeight: 131, startFrame: 0, endFrame: 0 });
         this.load.spritesheet('door', './assets/falling_door.png', { frameWidth: 158, frameHeight: 600, startFrame: 0, endFrame: 0 });
         this.load.spritesheet('ceiling', './assets/ceiling.png', { frameWidth: 300, frameHeight: 1600, startFrame: 0, endFrame: 0 });
+        this.load.spritesheet('barrel', './assets/obstacle.png', { frameWidth: 441, frameHeight: 660, startFrame: 0, endFrame: 0 });
     }
 
     create() {
         // place tile sprite
         this.background = this.add.tileSprite(-473.5, 0, 947, 700, 'background').setOrigin(0, 0);
         this.background2 = this.add.tileSprite(473.5, 0, 947, 700, 'background').setOrigin(0, 0);
+
+        // add trap
+        this.trap = this.physics.add.group({
+            key: 'trap',
+            frameQuantity: 12,
+            immovable: true,
+            allowGravity: false,
+            active: false,
+            visible: false,
+            enable: false
+        });
+        this.traps = [];
+        this.traps.push(this.createTrap(trapSpawnX * 1.5, trapSpawnY));
 
         // add platforms
         this.platform = this.physics.add.group({
@@ -54,19 +70,6 @@ class Play extends Phaser.Scene {
         this.platforms.push(this.createPlatform(platformSpawnX - game.config.width + 800, platformSpawnY));
         this.platforms.push(this.createPlatform(platformSpawnX + platformGap, platformSpawnY));
         this.platforms.push(this.createPlatform(platformSpawnX + platformGap + 800, platformSpawnY ));
-
-        // add trap
-        this.trap = this.physics.add.group({
-            key: 'trap',
-            frameQuantity: 12,
-            immovable: true,
-            allowGravity: false,
-            active: false,
-            visible: false,
-            enable: false
-        });
-        this.traps = [];
-        this.traps.push(this.createTrap(trapSpawnX * 1.5, trapSpawnY));
 
         // add closing door
         this.door = this.physics.add.group({
@@ -94,6 +97,19 @@ class Play extends Phaser.Scene {
         this.ceilings = [];
         this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
 
+        // add barrel
+        this.barrel = this.physics.add.group({
+            key: 'barrel',
+            frameQuantity: 12,
+            immovable: true,
+            allowGravity: false,
+            active: false,
+            visible: false,
+            enable: false
+        });
+        this.barrels = [];
+        this.barrels.push(this.createBarrel(barrelSpawnX * 2 , barrelSpawnY));
+
         // add player
         this.wizard = this.physics.add.sprite(wizardSpawnX, wizardSpawnY, 'running');
         this.wizard.scale = .2;
@@ -118,6 +134,49 @@ class Play extends Phaser.Scene {
         });
         this.physics.add.collider(this.wizard, this.doors, () => {
             this.gameOver();
+        });
+        this.physics.add.collider(this.wizard, this.barrels, (_wizard, _barrel) => {
+            if (!_barrel.anims.isPlaying) {
+                this.gameOver();
+            }
+        });
+        this.physics.add.collider(this.fireballs, this.barrels, (_fireball, _barrel) => {
+            for (var i = 0; i < this.fireballs.length; i++) {
+                if (this.fireballs[i] == _fireball) {
+                    this.fireballs[i].disableBody(true, true);
+                    this.fireballs.splice(i, 1);
+                    this.explosionSound.play(this.explosionConfig);
+                    break;
+                }
+            }
+            for (var i = 0; i < this.barrels.length; i++) {
+                if (this.barrels[i] == _barrel) {
+                    this.barrels[i].scale = .8;
+                    this.barrels[i].anims.play('explosion', true);
+                    this.barrelSound.play(this.barrelConfig);
+                    break;
+                }
+            }
+        });
+        this.physics.add.collider(this.fireballs, this.ceilings, (_fireball, _ceiling) => {
+            for (var i = 0; i < this.fireballs.length; i++) {
+                if (this.fireballs[i] == _fireball) {
+                    this.fireballs[i].disableBody(true, true);
+                    this.fireballs.splice(i, 1);
+                    this.explosionSound.play(this.explosionConfig);
+                    break;
+                }
+            }
+        });
+        this.physics.add.collider(this.fireballs, this.doors, (_fireball, _door) => {
+            for (var i = 0; i < this.fireballs.length; i++) {
+                if (this.fireballs[i] == _fireball) {
+                    this.fireballs[i].disableBody(true, true);
+                    this.fireballs.splice(i, 1);
+                    this.explosionSound.play(this.explosionConfig);
+                    break;
+                }
+            }
         });
 
         // define keys
@@ -218,12 +277,33 @@ class Play extends Phaser.Scene {
         }
         this.fireballSound = this.sound.add('explosion2', this.fireballConfig);
 
+        this.explosionConfig = {
+            rate: 1,
+            volume: 1,
+            loop: false
+        }
+        this.explosionSound = this.sound.add('explosion1', this.explosionConfig);
+
         this.doorClosingConfig = {
             rate: gameSpeed/10,
             volume: .5,
             loop: false
         }
         this.doorClosingSound = this.sound.add('closing', this.doorClosingConfig);
+
+        this.trapConfig = {
+            rate: .5,
+            volume: 1,
+            loop: false
+        }
+        this.trapSound = this.sound.add('trap', this.trapConfig);
+
+        this.barrelConfig = {
+            rate: 1,
+            volume: .8 ,
+            loop: false
+        }
+        this.barrelSound = this.sound.add('break', this.barrelConfig);
 
         // display score
         let scoreConfig = {
@@ -422,6 +502,18 @@ class Play extends Phaser.Scene {
         //Move traps
         for (var i = 0; i < this.traps.length; i++) {
             this.traps[i].x -= gameSpeed;
+            if(this.traps[i].y > trapActiveY) {
+                this.traps[i].y -= gameSpeed * ((trapSpawnY - trapActiveY) / (trapSpawnX - trapActiveX));
+            }
+            if (this.traps[i].y < trapActiveY) {
+                this.traps[i].y = trapActiveY;
+                this.trapSound.play(this.trapConfig);
+            }
+            if (this.traps[i].x < -100) {
+                this.traps[i].disableBody(true, true);
+                this.traps.splice(i, 1);
+                i--;
+            }
         }
 
         //Move doors
@@ -432,17 +524,40 @@ class Play extends Phaser.Scene {
                 this.doors[i].y = game.config.height - 270;
             }
             if (!this.doorClosingSound.isPlaying && this.doors[i].y > game.config.height/4 && !gameOver) {
-                this.doorClosingSound.play(this.doorClosing);
+                this.doorClosingSound.play(this.doorClosingConfig);
             }
             if (this.doors[i].x < -100) {
                 this.doors[i].disableBody(true, true);
                 this.doors.splice(i, 1);
+                i--;
             }
         }
 
         //Move ceilings
         for (var i = 0; i < this.ceilings.length; i++) {
             this.ceilings[i].x -= gameSpeed;
+            if (this.ceilings[i].x < -100) {
+                this.ceilings[i].disableBody(true, true);
+                this.ceilings.splice(i, 1);
+                i--;
+            }
+        }
+
+        //Move barrels
+        for (var i = 0; i < this.barrels.length; i++) {
+            this.barrels[i].x -= gameSpeed;
+            if (this.barrels[i].x < -100) {
+                this.barrels[i].disableBody(true, true);
+                this.barrels.splice(i, 1);
+                i--;
+            }
+            if (this.barrels[i].anims.currentFrame != null) {
+                if (this.barrels[i].anims.currentFrame.index == 5) {
+                    this.barrels[i].disableBody(true, true);
+                    this.barrels.splice(i, 1);
+                    i--;
+                }
+            }
         }
     }
 
@@ -528,6 +643,14 @@ class Play extends Phaser.Scene {
         c.scale = .5;
         c.enableBody(true, x, y, true, true);
         return c;
+    }
+
+    createBarrel(x, y) {
+        var b = this.barrel.get();
+        if (!b) return;
+        b.scale = .35;
+        b.enableBody(true, x, y, true, true);
+        return b;
     }
 
     createFireball(x, y) {

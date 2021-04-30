@@ -31,13 +31,19 @@ let platformSpawnX = game.config.width * 1.5;
 let platformSpawnY = game.config.height - 64;
 
 let trapSpawnX = game.config.width * 1.5;
-let trapSpawnY = game.config.height - 160;
+let trapSpawnY = game.config.height + 400;
+
+let trapActiveX = 100;
+let trapActiveY = game.config.height - 160;
 
 let doorSpawnX = game.config.width * 1.5;
 let doorSpawnY = -300;
 
 let ceilingSpawnX = doorSpawnX;
 let ceilingSpawnY = -100;
+
+let barrelSpawnX = game.config.width * 1.5;
+let barrelSpawnY = game.config.height - 230;
 
 let wizardSpawnX = game.config.width / 4;
 let wizardSpawnY = game.config.height - 200;
