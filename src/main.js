@@ -19,10 +19,11 @@ let jumpStrength = 600;
 let glideVelocity = 75;
 let fireballSpeed = 6;
 let shootAnimation = 250;
-let shootCooldown = 1000;
+let shootCooldown = 2000 - 100 * gameSpeed;
 let platformGap = 300;
 let gameOver = false;
 let chunkOverlap = 2;
+let chunksPerLevel = 10;
 
 //ui positions
 let scoreX = game.config.width - 130;
@@ -48,6 +49,8 @@ let barrelSpawnY = game.config.height - 230;
 
 let wizardSpawnX = game.config.width / 4;
 let wizardSpawnY = game.config.height - 200;
+
+let backgroundX = 0;
 
 // reserve keyboard vars
 let keyW, keyA, keyS, keyD, keySPACE;

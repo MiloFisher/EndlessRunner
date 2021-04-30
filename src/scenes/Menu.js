@@ -30,6 +30,12 @@ class Menu extends Phaser.Scene {
 
         // define keys
         keySPACE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+        // reset values
+        wizardSpawnX = game.config.width / 4;
+        wizardSpawnY = game.config.height - 200;
+        backgroundX = 0;
+        gameSpeed = 10;
     }
 
     update() {

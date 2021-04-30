@@ -43,6 +43,8 @@ class Play extends Phaser.Scene {
         // place tile sprite
         this.background = this.add.tileSprite(-473.5, 0, 947, 700, 'background').setOrigin(0, 0);
         this.background2 = this.add.tileSprite(473.5, 0, 947, 700, 'background').setOrigin(0, 0);
+        this.background.tilePositionX = backgroundX;
+        this.background2.tilePositionX = backgroundX;
 
         // add trap
         this.trap = this.physics.add.group({
@@ -369,12 +371,11 @@ class Play extends Phaser.Scene {
         this.queuedSlide = false;       // set while trying to slide but is still jumping or shooting
         gameOver = false;
         this.counter = 0;
+        this.scoreCounter = 0;
         this.gap = 0;
-
-        // Level up timer
-        // this.timer = this.time.delayedCall(5000, () => {
-        //     this.levelUp();
-        // }, null, this);
+        this.levelCounter = 0;
+        chunksPerLevel = gameSpeed * 2;
+        shootCooldown = 2000 - 100 * gameSpeed;
     }
 
     update() {
@@ -419,8 +420,12 @@ class Play extends Phaser.Scene {
 
         this.spawnObjects();
 
-        score += gameSpeed;
-        this.scoreDisplay.text = score;
+        this.scoreCounter++;
+        if(this.scoreCounter == 40 - gameSpeed * 2) {
+            this.scoreCounter = 0;
+            score += 1;
+            this.scoreDisplay.text = score;
+        }
     }
 
     randomChunk(variation) {
@@ -490,6 +495,14 @@ class Play extends Phaser.Scene {
     spawnObjects() {
         this.counter++;
         if(this.counter >= 800/gameSpeed - chunkOverlap) {
+            this.levelCounter++;
+            if(this.levelCounter >= chunksPerLevel - 3) {
+                this.gap = 3;
+                this.randomChunk(12);
+            }
+            if (this.levelCounter == chunksPerLevel) {
+                this.levelUp();
+            }
             this.counter = 0;
             if(this.gap == 0) {
                 this.randomChunk(Phaser.Math.Between(0, 12));
@@ -694,13 +707,6 @@ class Play extends Phaser.Scene {
         //Move barrels
         for (var i = 0; i < this.barrels.length; i++) {
             this.barrels[i].x -= gameSpeed;
-            // if (this.barrels[i].anims.currentFrame != null) {
-            //     if (this.barrels[i].anims.currentFrame.index == 5) {
-            //         this.barrels[i].disableBody(true, true);
-            //         this.barrels.splice(i, 1);
-            //         i--;
-            //     }
-            // }
             if (this.barrels[i].x < -100) {
                 this.barrels[i].disableBody(true, true);
                 this.barrels.splice(i, 1);
@@ -836,6 +842,10 @@ class Play extends Phaser.Scene {
     levelUp() {
         game.sound.stopAll();
         gameSpeed++;
+        wizardSpawnX = this.wizard.x;
+        wizardSpawnY = this.wizard.y;
+        backgroundX = this.background.tilePositionX;
+        console.log("Level Up!");
         this.scene.start('playScene');
     }
 
