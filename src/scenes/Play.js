@@ -5,8 +5,8 @@ class Play extends Phaser.Scene {
 
     preload() {
         // load images/tile sprites
-        this.load.image('platform', './assets/temp_platform.png');
-        this.load.image('background', './assets/temp_background.png');
+        this.load.image('platform', './assets/long_ground.png');
+        this.load.image('background', './assets/background.png');
 
         // load audio
         this.load.audio('glide', './assets/Gliding.mp3');
@@ -19,6 +19,7 @@ class Play extends Phaser.Scene {
         this.load.audio('door_close', './assets/Door Closing.mp3');
         this.load.audio('explosion1', './assets/Explosion+1.wav');
         this.load.audio('explosion2', './assets/explosion38.wav');
+        this.load.audio('closing', './assets/Door Closing.mp3');
 
         // load spritesheet
         this.load.spritesheet('running', './assets/wizard_running.png', { frameWidth: 350, frameHeight: 500, startFrame: 0, endFrame: 1 });
@@ -28,11 +29,15 @@ class Play extends Phaser.Scene {
         this.load.spritesheet('sliding', './assets/wizard_sliding.png', { frameWidth: 500, frameHeight: 500, startFrame: 0, endFrame: 0 });
         this.load.spritesheet('fireball', './assets/fireball.png', { frameWidth: 300, frameHeight: 200, startFrame: 0, endFrame: 3 });
         this.load.spritesheet('explosion', './assets/explosion.png', { frameWidth: 300, frameHeight: 300, startFrame: 0, endFrame: 5 });
+        this.load.spritesheet('trap', './assets/ground_trap.png', { frameWidth: 196, frameHeight: 131, startFrame: 0, endFrame: 0 });
+        this.load.spritesheet('door', './assets/falling_door.png', { frameWidth: 158, frameHeight: 600, startFrame: 0, endFrame: 0 });
+        this.load.spritesheet('ceiling', './assets/ceiling.png', { frameWidth: 300, frameHeight: 1600, startFrame: 0, endFrame: 0 });
     }
 
     create() {
         // place tile sprite
-        this.background = this.add.tileSprite(0, 0, 1200, 700, 'background').setOrigin(0, 0);
+        this.background = this.add.tileSprite(-473.5, 0, 947, 700, 'background').setOrigin(0, 0);
+        this.background2 = this.add.tileSprite(473.5, 0, 947, 700, 'background').setOrigin(0, 0);
 
         // add platforms
         this.platform = this.physics.add.group({
@@ -46,7 +51,9 @@ class Play extends Phaser.Scene {
         });
         this.platforms = [];
         this.platforms.push(this.createPlatform(platformSpawnX - game.config.width, platformSpawnY));
+        this.platforms.push(this.createPlatform(platformSpawnX - game.config.width + 800, platformSpawnY));
         this.platforms.push(this.createPlatform(platformSpawnX + platformGap, platformSpawnY));
+        this.platforms.push(this.createPlatform(platformSpawnX + platformGap + 800, platformSpawnY ));
 
         // add trap
         this.trap = this.physics.add.group({
@@ -59,7 +66,33 @@ class Play extends Phaser.Scene {
             enable: false
         });
         this.traps = [];
-        this.traps.push(this.createTrap(platformSpawnX - game.config.width, platformSpawnY));
+        this.traps.push(this.createTrap(trapSpawnX * 1.5, trapSpawnY));
+
+        // add closing door
+        this.door = this.physics.add.group({
+            key: 'door',
+            frameQuantity: 12,
+            immovable: true,
+            allowGravity: false,
+            active: false,
+            visible: false,
+            enable: false
+        });
+        this.doors = [];
+        this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
+
+        // add door ceiling
+        this.ceiling = this.physics.add.group({
+            key: 'ceiling',
+            frameQuantity: 12,
+            immovable: true,
+            allowGravity: false,
+            active: false,
+            visible: false,
+            enable: false
+        });
+        this.ceilings = [];
+        this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
 
         // add player
         this.wizard = this.physics.add.sprite(wizardSpawnX, wizardSpawnY, 'running');
@@ -83,6 +116,9 @@ class Play extends Phaser.Scene {
         this.physics.add.collider(this.wizard, this.traps, () => {
             this.gameOver();
         });
+        this.physics.add.collider(this.wizard, this.doors, () => {
+            this.gameOver();
+        });
 
         // define keys
         keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -94,7 +130,7 @@ class Play extends Phaser.Scene {
         this.anims.create({
             key: 'running',
             frames: this.anims.generateFrameNumbers('running', { start: 0, end: 1, first: 0 }),
-            frameRate: 10,
+            frameRate: gameSpeed,
             scale: .2
         });
 
@@ -140,7 +176,7 @@ class Play extends Phaser.Scene {
 
         // sound config
         this.runConfig = {
-            rate: 1.5,
+            rate: gameSpeed/8,
             volume: 2,
             loop: true
         }
@@ -182,6 +218,13 @@ class Play extends Phaser.Scene {
         }
         this.fireballSound = this.sound.add('explosion2', this.fireballConfig);
 
+        this.doorClosingConfig = {
+            rate: gameSpeed/10,
+            volume: .5,
+            loop: false
+        }
+        this.doorClosingSound = this.sound.add('closing', this.doorClosingConfig);
+
         // display score
         let scoreConfig = {
             fontFamily: 'Courier',
@@ -207,6 +250,7 @@ class Play extends Phaser.Scene {
         this.isGliding = false;         // set while player is gliding only
         this.queuedGlide = false;       // set while trying to glide but is still shooting
         this.queuedSlide = false;       // set while trying to slide but is still jumping or shooting
+        gameOver = false;
     }
 
     update() {
@@ -242,8 +286,7 @@ class Play extends Phaser.Scene {
             this.shoot();
         }
 
-        this.background.tilePositionX += gameSpeed;
-        this.updatePlatforms();
+        this.updateObjects();
 
         this.updateSounds();
 
@@ -360,16 +403,46 @@ class Play extends Phaser.Scene {
         }
     }
 
-    updatePlatforms() {
+    updateObjects() {
+        // Move background
+        this.background.tilePositionX += gameSpeed / 2;
+        this.background2.tilePositionX += gameSpeed / 2;
+
+        // Move platforms
         for(var i = 0; i < this.platforms.length; i++) {
             this.platforms[i].x -= gameSpeed;
-            this.platforms[i].x -= gameSpeed;
             if (this.platforms[i].x <= -game.config.width + platformGap) {
                 this.platforms[i].x = platformSpawnX + platformGap;
             }
             if (this.platforms[i].x <= -game.config.width + platformGap) {
                 this.platforms[i].x = platformSpawnX + platformGap;
             }
+        }
+
+        //Move traps
+        for (var i = 0; i < this.traps.length; i++) {
+            this.traps[i].x -= gameSpeed;
+        }
+
+        //Move doors
+        for (var i = 0; i < this.doors.length; i++) {
+            this.doors[i].x -= gameSpeed;
+            this.doors[i].y += gameSpeed * ((335  - doorSpawnY)/(doorSpawnX - this.wizard.x));
+            if (this.doors[i].y > game.config.height - 270) {
+                this.doors[i].y = game.config.height - 270;
+            }
+            if (!this.doorClosingSound.isPlaying && this.doors[i].y > game.config.height/4 && !gameOver) {
+                this.doorClosingSound.play(this.doorClosing);
+            }
+            if (this.doors[i].x < -100) {
+                this.doors[i].disableBody(true, true);
+                this.doors.splice(i, 1);
+            }
+        }
+
+        //Move ceilings
+        for (var i = 0; i < this.ceilings.length; i++) {
+            this.ceilings[i].x -= gameSpeed;
         }
     }
 
@@ -427,15 +500,34 @@ class Play extends Phaser.Scene {
     createPlatform(x, y) {
         var p = this.platform.get();
         if (!p) return;
+        p.scale = .5;
         p.enableBody(true, x, y, true, true);
+        p.setBodySize(1600, 250);
         return p;
     }
 
     createTrap(x, y) {
         var t = this.trap.get();
         if (!t) return;
+        t.scale = .5;
         t.enableBody(true, x, y, true, true);
         return t;
+    }
+
+    createDoor(x, y) {
+        var d = this.door.get();
+        if (!d) return;
+        d.scale = .5;
+        d.enableBody(true, x, y, true, true);
+        return d;
+    }
+
+    createCeiling(x, y) {
+        var c = this.ceiling.get();
+        if (!c) return;
+        c.scale = .5;
+        c.enableBody(true, x, y, true, true);
+        return c;
     }
 
     createFireball(x, y) {
@@ -447,6 +539,14 @@ class Play extends Phaser.Scene {
     }
 
     gameOver() {
+        gameOver = true;
+        this.runSound.stop();
+        this.jumpSound.stop();
+        this.landSound.stop();
+        this.glideSound.stop();
+        this.slideSound.stop();
+        this.fireballSound.stop();
+        this.doorClosingSound.stop();
         this.scene.start('menuScene');
     }
 }
