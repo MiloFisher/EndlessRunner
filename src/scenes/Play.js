@@ -171,11 +171,11 @@ class Play extends Phaser.Scene {
         this.physics.add.collider(this.wizard, this.doors, () => {
             this.gameOver();
         });
-        // this.physics.add.collider(this.wizard, this.barrels, (_wizard, _barrel) => {
-        //     if (!_barrel.anims.isPlaying) {
-        //         this.gameOver();
-        //     }
-        // });
+        this.physics.add.collider(this.wizard, this.barrels, (_wizard, _barrel) => {
+            if (!_barrel.anims.isPlaying) {
+                this.gameOver();
+            }
+        });
         this.physics.add.collider(this.fireballs, this.barrels, (_fireball, _barrel) => {
             for (var i = 0; i < this.fireballs.length; i++) {
                 if (this.fireballs[i] == _fireball) {
@@ -370,6 +370,11 @@ class Play extends Phaser.Scene {
         gameOver = false;
         this.counter = 0;
         this.gap = 0;
+
+        // Level up timer
+        // this.timer = this.time.delayedCall(5000, () => {
+        //     this.levelUp();
+        // }, null, this);
     }
 
     update() {
@@ -826,6 +831,12 @@ class Play extends Phaser.Scene {
         f.scale = .3;
         f.enableBody(true, x, y, true, true);
         return f;
+    }
+
+    levelUp() {
+        game.sound.stopAll();
+        gameSpeed++;
+        this.scene.start('playScene');
     }
 
     gameOver() {
