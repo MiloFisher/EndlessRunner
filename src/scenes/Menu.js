@@ -59,19 +59,6 @@ class Menu extends Phaser.Scene {
         this.shootText.alpha = 0.3;
         this.shootText.angle = -7;
 
-        let config = {
-            fontFamily: 'Courier',
-            fontSize: '20px',
-            backgroundColor: '#000000',
-            color: '#FFFFFF',
-            align: 'left',
-            padding: {
-                top: 5,
-                bottom: 5,
-            },
-            fixedWidth: 450
-        }
-
         // Game Over screen
         if(gameOver) {
             this.gameOverBack = this.add.image(0, 0, 'gameover_background').setOrigin(0, 0);
