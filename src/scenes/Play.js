@@ -353,7 +353,7 @@ class Play extends Phaser.Scene {
         }
         this.barrelSound = this.sound.add('break', this.barrelConfig);
 
-        this.scoreDisplay = this.add.text(scoreX, scoreY, '0m', { font: "32px Gothic", fill: "#fff" });
+        this.scoreDisplay = this.add.text(scoreX, scoreY, score + 'm', { font: "32px Gothic", fill: "#fff" });
         this.scoreDisplay.setStroke('#000', 4);
         this.scoreDisplay.setShadow(2, 2, "#333333", 2, true, true);
 
