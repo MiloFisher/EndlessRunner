@@ -67,7 +67,7 @@ class Menu extends Phaser.Scene {
             this.gameOverText.setStroke('#00f', 16);
             this.scoreText = this.add.text(game.config.width * .33, game.config.height / 10 + 120, 'Distance Travelled: ' + score + 'm', { font: "40px Gothic", fill: "#fff" });
             this.scoreText.setStroke('#00f', 8);
-            this.continueText = this.add.text(game.config.width * .28, game.config.height * .9, 'Press \'SPACE\' to continue...', { font: "48px Gothic", fill: "#fff" });
+            this.continueText = this.add.text(game.config.width * .29, game.config.height * .9, 'Press \'SPACE\' to continue...', { font: "48px Gothic", fill: "#fff" });
             this.continueText.setStroke('#00f', 8);
 
             this.gameOverImage.scale = .65;
@@ -94,6 +94,7 @@ class Menu extends Phaser.Scene {
                 this.gameOverBack.visible = false;
                 this.gameOverImage.visible = false;
                 this.continueText.visible = false;
+                this.scoreText.visible = false;
                 gameOver = false;
             } else {
                 score = 0;
