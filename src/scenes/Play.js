@@ -353,24 +353,9 @@ class Play extends Phaser.Scene {
         }
         this.barrelSound = this.sound.add('break', this.barrelConfig);
 
-        // display score
-        let scoreConfig = {
-            fontFamily: 'Courier',
-            fontSize: '32px',
-            backgroundColor: '#000000',
-            color: '#FFFFFF',
-            align: 'left',
-            padding: {
-                top: 5,
-                bottom: 5,
-            },
-            fixedWidth: 100
-        }
-
         this.scoreDisplay = this.add.text(scoreX, scoreY, '0m', { font: "32px Gothic", fill: "#fff" });
         this.scoreDisplay.setStroke('#000', 4);
         this.scoreDisplay.setShadow(2, 2, "#333333", 2, true, true);
-        //this.scoreDisplay = this.add.text(scoreX, scoreY, score, scoreConfig);
 
         // Variables
         this.doingAction = false;       // set while player is doing any action
