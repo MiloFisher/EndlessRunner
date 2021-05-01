@@ -63,8 +63,10 @@ class Menu extends Phaser.Scene {
         if(gameOver) {
             this.gameOverBack = this.add.image(0, 0, 'gameover_background').setOrigin(0, 0);
             this.gameOverImage = this.add.image(0, 0, 'gameover');
-            this.gameOverText = this.add.text(game.config.width / 4, game.config.height / 7, 'GAME OVER', { font: "100px Gothic", fill: "#fff" });
+            this.gameOverText = this.add.text(game.config.width / 4, game.config.height / 10, 'GAME OVER', { font: "100px Gothic", fill: "#fff" });
             this.gameOverText.setStroke('#00f', 16);
+            this.scoreText = this.add.text(game.config.width * .33, game.config.height / 10 + 120, 'Distance Travelled: ' + score + 'm', { font: "40px Gothic", fill: "#fff" });
+            this.scoreText.setStroke('#00f', 8);
             this.continueText = this.add.text(game.config.width * .28, game.config.height * .9, 'Press \'SPACE\' to continue...', { font: "48px Gothic", fill: "#fff" });
             this.continueText.setStroke('#00f', 8);
 
