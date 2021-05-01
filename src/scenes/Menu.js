@@ -36,6 +36,7 @@ class Menu extends Phaser.Scene {
         wizardSpawnY = game.config.height - 200;
         backgroundX = 0;
         gameSpeed = 10;
+        jumpStrength = 600;
     }
 
     update() {

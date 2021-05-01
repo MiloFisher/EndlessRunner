@@ -22,6 +22,7 @@ class Play extends Phaser.Scene {
         this.load.audio('closing', './assets/Door Closing.mp3');
         this.load.audio('trap', './assets/Spike Trap.mp3');
         this.load.audio('break', './assets/Box Breaking.mp3');
+        this.load.audio('music', './assets/music1.mp3');
 
         // load spritesheet
         this.load.spritesheet('running', './assets/wizard_running.png', { frameWidth: 350, frameHeight: 500, startFrame: 0, endFrame: 1 });
@@ -223,6 +224,7 @@ class Play extends Phaser.Scene {
         keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
         keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+        keyL = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L);
 
         // animation config
         this.anims.create({
@@ -273,9 +275,16 @@ class Play extends Phaser.Scene {
         });
 
         // sound config
+        this.musicConfig = {
+            rate: gameSpeed / 12,
+            volume: 1,
+            loop: true
+        }
+        this.musicSound = this.sound.add('music', this.musicConfig);
+
         this.runConfig = {
             rate: gameSpeed/8,
-            volume: 2,
+            volume: 6,
             loop: true
         }
         this.runSound = this.sound.add('run', this.runConfig);
@@ -283,28 +292,28 @@ class Play extends Phaser.Scene {
 
         this.jumpConfig = {
             rate: 1,
-            volume: 1,
+            volume: 2,
             loop: false
         }
         this.jumpSound = this.sound.add('jump', this.jumpConfig);
 
         this.glideConfig = {
             rate: .5,
-            volume: .5,
+            volume: 1,
             loop: true
         }
         this.glideSound = this.sound.add('glide', this.glideConfig);
 
         this.landConfig = {
             rate: 2,
-            volume: .5,
+            volume: 1,
             loop: false
         }
         this.landSound = this.sound.add('land', this.landConfig);
 
         this.slideConfig = {
             rate: .5,
-            volume: .3,
+            volume: .6,
             loop: true
         }
         this.slideSound = this.sound.add('slide', this.slideConfig);
@@ -347,7 +356,7 @@ class Play extends Phaser.Scene {
         // display score
         let scoreConfig = {
             fontFamily: 'Courier',
-            fontSize: '28px',
+            fontSize: '32px',
             backgroundColor: '#000000',
             color: '#FFFFFF',
             align: 'left',
@@ -358,7 +367,10 @@ class Play extends Phaser.Scene {
             fixedWidth: 100
         }
 
-        this.scoreDisplay = this.add.text(scoreX, scoreY, score, scoreConfig);
+        this.scoreDisplay = this.add.text(scoreX, scoreY, '0m', { font: "32px Gothic", fill: "#fff" });
+        this.scoreDisplay.setStroke('#000', 4);
+        this.scoreDisplay.setShadow(2, 2, "#333333", 2, true, true);
+        //this.scoreDisplay = this.add.text(scoreX, scoreY, score, scoreConfig);
 
         // Variables
         this.doingAction = false;       // set while player is doing any action
@@ -376,9 +388,38 @@ class Play extends Phaser.Scene {
         this.levelCounter = 0;
         chunksPerLevel = gameSpeed * 2;
         shootCooldown = 2000 - 100 * gameSpeed;
+        gravityMod = gameSpeed / 10;
+        this.musicSound.play(this.musicConfig);
+
+        this.wizard.setGravityY(980 * gravityMod);
+        jumpStrength = 600 * (gravityMod + 1)/2;
+        
+        //  Rainbow Text
+        this.i = 0;
+        this.hsv = Phaser.Display.Color.HSVColorWheel();
+        this.text1 = this.add.text(game.config.width / 2 - 100, game.config.height / 3, 'Level ' + (gameSpeed - 9), { font: "74px Gothic", fill: "#fff" });
+        this.text1.setStroke('#00f', 8);
+        this.text1.setShadow(2, 2, "#333333", 2, true, true);
     }
 
     update() {
+        // rainbow text
+        if (this.i < 120 - (gameSpeed*2)) {
+            const top = this.hsv[this.i].color;
+            const bottom = this.hsv[359 - this.i].color;
+            this.text1.setTint(top, top, bottom, bottom);
+            this.i++;
+        }
+        else if (this.i == 120 - (gameSpeed * 2)){
+            this.text1.visible = false;
+            this.i++;
+        }
+
+        // cheat code to level up
+        if (Phaser.Input.Keyboard.JustDown(keyL)) {
+            this.levelUp();
+        }
+
         //check for game over
         this.checkForGameOver();
 
@@ -406,6 +447,7 @@ class Play extends Phaser.Scene {
                 this.slide();
             } else {
                 this.queuedSlide = true;
+                this.wizard.setGravityY(1960 * gravityMod);
             }
         }
         if (Phaser.Input.Keyboard.JustDown(keyD) && !this.isShooting) {
@@ -421,10 +463,14 @@ class Play extends Phaser.Scene {
         this.spawnObjects();
 
         this.scoreCounter++;
-        if(this.scoreCounter == 40 - gameSpeed * 2) {
+        if(this.scoreCounter >= 40 - gameSpeed * 2) {
             this.scoreCounter = 0;
-            score += 1;
-            this.scoreDisplay.text = score;
+            if (40 - gameSpeed * 2 >= 0) {
+                score += 1;
+            } else {
+                score += -1 * (40 - gameSpeed * 2);
+            }
+            this.scoreDisplay.text = score + 'm';
         }
     }
 
@@ -473,7 +519,7 @@ class Play extends Phaser.Scene {
             case 9:
                 this.traps.push(this.createTrap(trapSpawnX, trapSpawnY));
                 this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
-                this.gap = 1;
+                //this.gap = 3;
                 break;
             case 10:
                 this.barrels.push(this.createBarrel(barrelSpawnX, barrelSpawnY));
@@ -586,6 +632,7 @@ class Play extends Phaser.Scene {
                     this.wizard.anims.play('running', true);
                 }
                 this.queuedSlide = false;
+                this.wizard.setGravityY(980 * gravityMod);
             }
         }, null, this);
         this.clock2 = this.time.delayedCall(shootCooldown, () => {
@@ -663,12 +710,15 @@ class Play extends Phaser.Scene {
         //Move traps
         for (var i = 0; i < this.traps.length; i++) {
             this.traps[i].x -= gameSpeed;
+            if (this.traps[i].y > trapActiveY && trapActiveY >= this.traps[i].y - (gameSpeed * ((trapSpawnY - trapActiveY) / (trapSpawnX - trapActiveX)))) {
+                this.trapSound.play(this.trapConfig);
+            }
             if(this.traps[i].y > trapActiveY) {
                 this.traps[i].y -= gameSpeed * ((trapSpawnY - trapActiveY) / (trapSpawnX - trapActiveX));
             }
             if (this.traps[i].y < trapActiveY) {
                 this.traps[i].y = trapActiveY;
-                this.trapSound.play(this.trapConfig);
+                //this.trapSound.play(this.trapConfig);
             }
             if (this.traps[i].x < -100) {
                 this.traps[i].disableBody(true, true);
@@ -723,6 +773,7 @@ class Play extends Phaser.Scene {
             if (this.queuedSlide) {
                 this.slide();
             }
+            this.wizard.setGravityY(980 * gravityMod);
             this.queuedSlide = false;
             this.glideSound.stop();
             this.landSound.play(this.landConfig);
@@ -753,6 +804,7 @@ class Play extends Phaser.Scene {
                 this.wizard.setBodySize(350, 500);
                 this.slideSound.stop();
             } else {
+                this.wizard.setGravityY(980 * gravityMod);
                 this.queuedSlide = false;
             }
         }
@@ -842,8 +894,12 @@ class Play extends Phaser.Scene {
     levelUp() {
         game.sound.stopAll();
         gameSpeed++;
+        if (this.isSliding) {
+            wizardSpawnY = this.wizard.y - 25;
+        } else {
+            wizardSpawnY = this.wizard.y;
+        }
         wizardSpawnX = this.wizard.x;
-        wizardSpawnY = this.wizard.y;
         backgroundX = this.background.tilePositionX;
         console.log("Level Up!");
         this.scene.start('playScene');
