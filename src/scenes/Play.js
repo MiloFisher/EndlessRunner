@@ -460,64 +460,62 @@ class Play extends Phaser.Scene {
     }
 
     randomChunk(variation) {
-        console.log(variation);
+        let gapVariation = [ 0, 0, 0, 4 ];
+
         switch(variation) {
             case 0:
                 this.traps.push(this.createTrap(trapSpawnX, trapSpawnY));
                 this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = 0;
                 break;
             case 1:
-                this.barrels.push(this.createBarrel(barrelSpawnX, barrelSpawnY));
-                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
-                break;
-            case 2:
-                this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
-                this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
-                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
-                break;
-            case 3:
                 this.traps.push(this.createTrap(trapSpawnX, trapSpawnY));
                 this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = 0;
+                break;
+            case 2:
+                this.traps.push(this.createTrap(trapSpawnX, trapSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = 0;
+                break;
+            case 3:
+                this.barrels.push(this.createBarrel(barrelSpawnX, barrelSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = gapVariation[Phaser.Math.Between(0, gapVariation.length-1)];
                 break;
             case 4:
                 this.barrels.push(this.createBarrel(barrelSpawnX, barrelSpawnY));
                 this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = gapVariation[Phaser.Math.Between(0, gapVariation.length - 1)];
                 break;
             case 5:
+                this.barrels.push(this.createBarrel(barrelSpawnX, barrelSpawnY));
+                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = gapVariation[Phaser.Math.Between(0, gapVariation.length - 1)];
+                break;
+            case 6:
                 this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
                 this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
                 this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
-                break;
-            case 6:
-                this.traps.push(this.createTrap(trapSpawnX, trapSpawnY));
-                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = gapVariation[Phaser.Math.Between(0, gapVariation.length - 1)];
                 break;
             case 7:
-                this.barrels.push(this.createBarrel(barrelSpawnX, barrelSpawnY));
+                this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
+                this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
                 this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = gapVariation[Phaser.Math.Between(0, gapVariation.length - 1)];
                 break;
             case 8:
                 this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
                 this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
                 this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
+                this.gap = gapVariation[Phaser.Math.Between(0, gapVariation.length - 1)];
                 break;
             case 9:
-                this.traps.push(this.createTrap(trapSpawnX, trapSpawnY));
                 this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
-                //this.gap = 3;
+                this.gap = gapVariation[Phaser.Math.Between(0, gapVariation.length - 1)];
                 break;
-            case 10:
-                this.barrels.push(this.createBarrel(barrelSpawnX, barrelSpawnY));
-                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
-                this.gap = 3;
-                break;
-            case 11:
-                this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
-                this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
-                this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
-                this.gap = 3;
-                break;
-            case 12:
+            case 99:
                 this.platforms.push(this.createPlatform(platformSpawnX, platformSpawnY));
                 break;
         }
@@ -528,15 +526,17 @@ class Play extends Phaser.Scene {
         if(this.counter >= 800/gameSpeed - chunkOverlap) {
             this.levelCounter++;
             if(this.levelCounter >= chunksPerLevel - 3) {
-                this.gap = 3;
-                this.randomChunk(12);
+                this.randomChunk(99);
+                this.gap = 4;
             }
             if (this.levelCounter == chunksPerLevel) {
                 this.levelUp();
             }
             this.counter = 0;
             if(this.gap == 0) {
-                this.randomChunk(Phaser.Math.Between(0, 12));
+                this.randomChunk(Phaser.Math.Between(0, 9));
+            } else  if (this.gap == 1) {
+                this.randomChunk(Phaser.Math.Between(3, 9));
             }
             this.gap--;
             if(this.gap < 0) {
