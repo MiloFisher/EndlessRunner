@@ -1,3 +1,13 @@
+// HEADER
+// Group:           Milo Fisher, Bill Wong, Zirui Li, Mark Wolverton
+// Game Title:      Wizard Run
+// Completed On:    5/22/21
+// Creative Tilt:   
+// Programming wise, I am proud of the scaling traps, meaning that as the game gets faster, the traps' timings will still be correct, ex: the closing door will always leave just enough room to slide under, regardless of game speed
+// Visually, I am proud of the music that increases in tempo the faster the game gets. It really hypes the player up to react faster as the game becomes more difficult
+
+// Note:  We made all of our own assets, including sound fx, music, and art
+
 let config = {
     type: Phaser.WEBGL,
     width: 1200,
