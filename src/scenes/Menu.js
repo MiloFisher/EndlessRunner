@@ -23,11 +23,12 @@ class Menu extends Phaser.Scene {
         this.musicSound.play(this.musicConfig);
     
         this.menu = this.add.tileSprite(0, 0, 1200, 887, 'menu').setOrigin(0, 0);
-        this.gameName = this.add.text(game.config.width * .3, game.config.height / 7, 'Game Name', { font: "100px Gothic", fill: "#fff" });
+        this.gameName = this.add.text(game.config.width * .3 + 22, game.config.height / 7, 'Wizard Run', { font: "100px Gothic", fill: "#fff" });
+        this.gameName.setTint(0x0000ff, 0xf000000, 0x000000, 0xff00ff);
         this.gameName.setStroke('#000', 8);
 
-        this.gameName = this.add.text(game.config.width * .34, game.config.height * .9, 'Press \'SPACE\' to start', { font: "50px Gothic", fill: "#fff" });
-        this.gameName.setStroke('#000', 6);
+        this.startText = this.add.text(game.config.width * .34, game.config.height * .87, 'Press \'SPACE\' to start', { font: "50px Gothic", fill: "#fff" });
+        this.startText.setStroke('#000', 6);
         
         this.shimmer = 0;
 

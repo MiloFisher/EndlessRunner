@@ -58,7 +58,6 @@ class Play extends Phaser.Scene {
             enable: false
         });
         this.traps = [];
-        //this.traps.push(this.createTrap(trapSpawnX * 1.5, trapSpawnY));
 
         // add platforms
         this.platform = this.physics.add.group({
@@ -75,29 +74,6 @@ class Play extends Phaser.Scene {
         this.platforms.push(this.createPlatform(platformSpawnX - (800 - gameSpeed * chunkOverlap) * 1, platformSpawnY));
         this.platforms.push(this.createPlatform(platformSpawnX -  (800 - gameSpeed * chunkOverlap) * 0, platformSpawnY));
 
-        // add cliffs
-        this.cliff1 = this.physics.add.group({
-            key: 'cliff1',
-            frameQuantity: 12,
-            immovable: true,
-            allowGravity: false,
-            active: false,
-            visible: false,
-            enable: false
-        });
-        this.cliff2 = this.physics.add.group({
-            key: 'cliff2',
-            frameQuantity: 12,
-            immovable: true,
-            allowGravity: false,
-            active: false,
-            visible: false,
-            enable: false
-        });
-        this.cliffs = [];
-        //this.cliffs.push(this.createCliff1(platformSpawnX - game.config.width, platformSpawnY));
-        //this.cliffs.push(this.createCliff2(platformSpawnX + platformGap, platformSpawnY));
-
         // add closing door
         this.door = this.physics.add.group({
             key: 'door',
@@ -109,7 +85,6 @@ class Play extends Phaser.Scene {
             enable: false
         });
         this.doors = [];
-        //this.doors.push(this.createDoor(doorSpawnX, doorSpawnY));
 
         // add door ceiling
         this.ceiling = this.physics.add.group({
@@ -122,7 +97,6 @@ class Play extends Phaser.Scene {
             enable: false
         });
         this.ceilings = [];
-        //this.ceilings.push(this.createCeiling(ceilingSpawnX, ceilingSpawnY));
 
         // add barrel
         this.barrel = this.physics.add.group({
@@ -163,8 +137,7 @@ class Play extends Phaser.Scene {
             enable: false
         });
         this.fireballs = [];
-        //this.fireballs.body.allowGravity = false;
-
+ 
         // add collisions
         this.physics.add.collider(this.wizard, this.platforms);
         this.physics.add.collider(this.wizard, this.cliffs);
@@ -684,14 +657,6 @@ class Play extends Phaser.Scene {
             }
         }
 
-        // Move cliffs
-        for (var i = 0; i < this.cliffs.length; i++) {
-            this.cliffs[i].x -= gameSpeed;
-            if (this.cliffs[i].x <= -game.config.width + platformGap) {
-                this.cliffs[i].x = platformSpawnX + platformGap;
-            }
-        }
-
         //Move traps
         for (var i = 0; i < this.traps.length; i++) {
             this.traps[i].x -= gameSpeed;
@@ -703,7 +668,6 @@ class Play extends Phaser.Scene {
             }
             if (this.traps[i].y < trapActiveY) {
                 this.traps[i].y = trapActiveY;
-                //this.trapSound.play(this.trapConfig);
             }
             if (this.traps[i].x < -100) {
                 this.traps[i].disableBody(true, true);
